@@ -11,8 +11,7 @@ plugins {
 }
 
 val libraryBasePath = "$rootDir/third_party/java-cef/bin"
-val libraryPath = "$libraryBasePath/bin/jcef_app.app/Contents/Java"
-
+val libraryPath = "$libraryBasePath/jcef_app.app/Contents/Java"
 val cefDownloadTar = run {
     val tarFile = File("third_party/macosx-amd64.tar.gz")
 

@@ -1,3 +1,5 @@
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package org.jetbrains.compose.desktop
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
@@ -8,28 +10,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.ComposeWindow
+import androidx.compose.ui.awt.ComposePanel
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
 import org.jetbrains.compose.desktop.browser.Browser
-import org.jetbrains.compose.desktop.browser.BrowserSlicer
 import org.jetbrains.compose.desktop.browser.BrowserView
+import java.awt.BorderLayout
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
+import javax.swing.JFrame
+import javax.swing.SwingUtilities
+import javax.swing.WindowConstants
 
 @Composable
 @Preview
-fun App(window: ComposeWindow, browser: Browser, url: MutableState<String>) {
+internal fun App(panel: ComposePanel, browser: Browser, url: MutableState<String>) {
     MaterialTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = Color.DarkGray
         ) {
             Column {
-                AddressBar(window, browser, url)
+                AddressBar(panel, browser, url)
                 Spacer(Modifier.height(10.dp))
                 WebView(browser)
             }
@@ -38,29 +40,52 @@ fun App(window: ComposeWindow, browser: Browser, url: MutableState<String>) {
 }
 
 
-fun main(args: Array<String>) = application {
+fun main(args: Array<String>) = SwingUtilities.invokeLater {
     val browser = when {
         args.isEmpty() -> BrowserView()
-        args[0] == "slices" -> BrowserSlicer(IntSize(800, 700))
+
+//        args[0] == "slices" -> BrowserSlicer(IntSize(800, 700))
         else -> {
             BrowserView()
         }
     }
     val url = mutableStateOf("https://www.google.com")
 
-    Window(onCloseRequest = ::exitApplication) {
-        window.title = "CEF-compose"
-        window.addWindowFocusListener(object : WindowAdapter() {
-            override fun windowGainedFocus(e: WindowEvent?) {
-                browser.load(this@Window.window, url.value)
-            }
-        })
-        App(window, browser, url)
+    SingleApp(browser, url)
+}
+
+internal fun SingleApp(browser: BrowserView, url: MutableState<String>) {
+    val window = JFrame()
+
+    // creating ComposePanel
+    val composePanel = ComposePanel()
+    window.defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
+    window.title = "CEF-compose"
+
+    window.addWindowFocusListener(object : WindowAdapter() {
+        override fun windowGainedFocus(e: WindowEvent?) {
+            browser.load(composePanel, url.value)
+        }
+    })
+    // addind ComposePanel on JFrame
+    window.contentPane.add(composePanel, BorderLayout.CENTER)
+
+    // setting the content
+    composePanel.setContent {
+        App(composePanel, browser, url)
     }
+
+    window.setSize(800, 600)
+    window.isVisible = true
+
 }
 
 @Composable
-private fun AddressBar(composeWindow: ComposeWindow, browser: Browser, url: MutableState<String>) {
+private fun AddressBar(
+    composeWindow: ComposePanel,
+    browser: Browser,
+    url: MutableState<String>
+) {
     Surface(
         color = Color.Transparent,
         modifier = Modifier
@@ -100,15 +125,15 @@ private fun WebView(browser: Browser) {
             is BrowserView -> {
                 browser.view()
             }
-            is BrowserSlicer -> {
-                Column {
-                    browser.slice(0, 200)
-                    Spacer(Modifier.height(30.dp))
-                    browser.slice(200, 200)
-                    Spacer(Modifier.height(30.dp))
-                    browser.tail()
-                }
-            }
+//            is BrowserSlicer -> {
+//                Column {
+//                    browser.slice(0, 200)
+//                    Spacer(Modifier.height(30.dp))
+//                    browser.slice(200, 200)
+//                    Spacer(Modifier.height(30.dp))
+//                    browser.tail()
+//                }
+//            }
         }
     }
 }

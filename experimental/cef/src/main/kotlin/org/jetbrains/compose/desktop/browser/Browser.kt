@@ -1,7 +1,9 @@
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package org.jetbrains.compose.desktop.browser
 
-import androidx.compose.ui.awt.ComposeWindow
+import androidx.compose.ui.awt.ComposePanel
 
-interface Browser {
-    fun load(window: ComposeWindow, url: String)
+internal interface Browser {
+    fun load(panel: ComposePanel, url: String)
 }

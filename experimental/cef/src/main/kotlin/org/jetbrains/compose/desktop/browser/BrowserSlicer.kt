@@ -29,7 +29,7 @@ import java.awt.Point
 import java.awt.event.*
 import javax.swing.JFrame
 
-internal class BrowserSlicer(val size: IntSize) : Browser {
+/*internal class BrowserSlicer(val size: IntSize) : Browser {
     private lateinit var bitmap: MutableState<Bitmap>
     private lateinit var recomposer: MutableState<Any>
     private var browser: CefBrowserWrapper? = null
@@ -85,7 +85,7 @@ internal class BrowserSlicer(val size: IntSize) : Browser {
         browser?.onLayout(0, 0, size.width, size.height)
     }
 
-    override fun load(window: ComposeWindow, url: String) {
+    override fun load(window: ComposeWindow, hardwareLayer: HardwareLayer?, url: String) {
         if (browser == null) {
             if (!window.isVisible) {
                 return
@@ -260,15 +260,15 @@ private class BrowserSlice(val handler: BrowserSlicer, val offset: Int, val heig
             Canvas(
                     modifier = Modifier.size(handler.size.width.dp, height.dp)
             ) {
-                /*drawIntoCanvas { canvas ->
+                *//*drawIntoCanvas { canvas ->
                     recomposer.value
                     canvas.nativeCanvas.drawBitmapIRect(
                             bitmap,
                             IRect(0, offset, handler.size.width, offset + height),
                             IRect(0, 0, handler.size.width, height).toRect()
                     )
-                }*/
+                }*//*
             }
         }
     }
-}
+}*/

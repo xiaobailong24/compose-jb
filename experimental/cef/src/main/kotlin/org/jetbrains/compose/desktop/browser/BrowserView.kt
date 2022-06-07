@@ -14,7 +14,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.ComposeWindow
+import androidx.compose.ui.awt.ComposePanel
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
@@ -30,9 +30,8 @@ import org.jetbrains.skija.Bitmap
 import org.jetbrains.skiko.HardwareLayer
 import java.awt.Component
 import java.awt.event.*
-import javax.swing.JFrame
 
-class BrowserView : Browser {
+internal class BrowserView : Browser {
     private lateinit var bitmap: MutableState<Bitmap>
     private lateinit var recomposer: MutableState<Any>
     internal var browser: CefBrowserWrapper? = null
@@ -75,10 +74,14 @@ class BrowserView : Browser {
         browser?.onLayout(location.x, location.y, size.width, size.height)
     }
 
-    override fun load(window: ComposeWindow, url: String) {
+    override fun load(panel: ComposePanel, url: String) {
         if (browser == null) {
-            if (!window.isVisible) return
-            val layer: HardwareLayer = getHardwareLayer(window) ?: throw Error("Browser initialization failed!")
+            if (!panel.isVisible) return
+            val layer: HardwareLayer = try {
+                getHardwareLayer(panel)!!
+            } catch (e: Exception) {
+                throw Error("Browser initialization failed!")
+            }
             browser = CefBrowserWrapper(
                 startURL = url,
                 layer = layer
@@ -96,14 +99,9 @@ class BrowserView : Browser {
         browser?.onDismiss()
     }
 
-    private fun getHardwareLayer(window: JFrame): HardwareLayer? {
-        val components = window.contentPane.components
-        for (component in components) {
-            if (component is HardwareLayer) {
-                return component
-            }
-        }
-        return null
+    private fun getHardwareLayer(panel: ComposePanel): HardwareLayer? {
+        val layer =  panel.layer?.component?.backedLayer
+        return layer
     }
 
     private fun addListeners(layer: Component) {
@@ -202,6 +200,7 @@ private class BrowserLayout(val handler: BrowserView) {
             ) {
                 drawIntoCanvas { canvas ->
                     recomposer.value
+                    // TODO: 2022/6/7 how to fix the deleted api?
                     /*canvas.nativeCanvas.drawImageRect(
                             bitmap.imageInfo,
                             IRect(0, 0, handler.size.width.toInt(), handler.size.height.toInt()).toRect()
