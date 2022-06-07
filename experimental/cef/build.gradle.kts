@@ -4,37 +4,30 @@ import de.undercouch.gradle.tasks.download.Download
 import kotlin.text.capitalize
 
 plugins {
-    kotlin("jvm") version "1.5.21"
-    id("org.jetbrains.compose") version "1.0.0-alpha1"
+    kotlin("jvm") version "1.6.10"
+    id("org.jetbrains.compose") version "1.1.1"
     id("de.undercouch.download") version "4.1.1"
     application
 }
 
-val libraryPath = "third_party/java-cef"
-val hostOs = System.getProperty("os.name")
-val target = when {
-    hostOs == "Mac OS X" -> "macos"
-    hostOs == "Linux" -> "linux"
-    hostOs.startsWith("Win") -> "windows"
-    else -> throw Error("Unknown os $hostOs")
-}
+val libraryBasePath = "$rootDir/third_party/java-cef/bin"
+val libraryPath = "$libraryBasePath/bin/jcef_app.app/Contents/Java"
 
-val cefDownloadZip = run {
-    val zipName = "jcef-runtime-$target.zip"
-    val zipFile = File("third_party/$zipName")
+val cefDownloadTar = run {
+    val tarFile = File("third_party/macosx-amd64.tar.gz")
 
     tasks.register("downloadCef", Download::class) {
-        onlyIf { !zipFile.exists() }
-        src("https://bintray.com/jetbrains/skija/download_file?file_path=$zipName")
-        dest(zipFile)
+        onlyIf { !tarFile.exists() }
+        src("https://github.com/jcefmaven/jcefbuild/releases/download/1.0.25/macosx-amd64.tar.gz")
+        dest(tarFile)
         onlyIfModified(true)
-    }.map { zipFile }
+    }.map { tarFile }
 }
 
-val cefUnZip = run {
+val cefUnTar = run {
     val targetDir = File("third_party/java-cef").apply { mkdirs() }
-    tasks.register("unzipCef", Copy::class) {
-        from(cefDownloadZip.map { zipTree(it) })
+    tasks.register("untarCef", Copy::class) {
+        from(cefDownloadTar.map { tarTree(it) })
         into(targetDir)
     }.map { targetDir }
 }
@@ -45,16 +38,18 @@ repositories {
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     // temp
     maven("https://packages.jetbrains.team/maven/p/ui/dev")
+    maven("https://packages.jetbrains.team/maven/p/skija/maven")
 }
 
 dependencies {
     implementation("org.jetbrains.jcef:jcef-skiko:0.1")
+    implementation("org.jetbrains.skija:skija-macos-x64:0.93.6")
     implementation(compose.desktop.currentOs)
 }
 
 tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
-    dependsOn(cefUnZip)
+    dependsOn(cefUnTar)
 }
 
 application {

@@ -1,22 +1,23 @@
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+
 package org.jetbrains.compose.desktop.browser
 
-import androidx.compose.ui.unit.IntOffset
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.KeyboardFocusManager
-import java.nio.ByteBuffer
 import org.cef.CefApp
 import org.cef.CefSettings
-import org.cef.browser.CefBrowser
 import org.cef.browser.BrowserView
+import org.cef.browser.CefBrowser
 import org.cef.handler.CefFocusHandlerAdapter
 import org.jetbrains.skija.Bitmap
-import org.jetbrains.skija.ImageInfo
 import org.jetbrains.skija.ColorAlphaType
+import org.jetbrains.skija.ImageInfo
 import org.jetbrains.skiko.HardwareLayer
+import java.awt.KeyboardFocusManager
+import java.awt.event.KeyEvent
+import java.awt.event.MouseEvent
+import java.awt.event.MouseWheelEvent
+import java.nio.ByteBuffer
 
-class CefBrowserWrapper {
+internal class CefBrowserWrapper {
     private var cefFocus = true
     private val browser: BrowserView
     public var onInvalidate: (() -> Unit)? = null
@@ -29,9 +30,9 @@ class CefBrowserWrapper {
         settings.windowless_rendering_enabled = true
         val cefApp = CefApp.getInstance(settings)
         val client = cefApp.createClient()
-        
+
         browser = object : BrowserView(layer, client, startURL, null) {
-            public override fun onBitmapChanged(popup: Boolean, buffer: ByteBuffer, width: Int, height: Int) {
+            override fun onBitmapChanged(popup: Boolean, buffer: ByteBuffer, width: Int, height: Int) {
                 super.onBitmapChanged(popup, buffer, width, height)
                 onInvalidate?.invoke()
             }
